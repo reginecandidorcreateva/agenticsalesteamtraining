@@ -78,6 +78,13 @@ function FeatureIcon({ type, tint }: { type: string; tint: string }) {
 export default function LandingPage() {
   return (
     <div style={{ background: "#ffffff" }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .landing-nav-links { display: none !important; }
+          .landing-logo { font-size: 16px !important; }
+          .landing-header-actions { gap: 10px !important; }
+        }
+      `}</style>
       {/* Nav */}
       <header
         style={{
@@ -99,10 +106,10 @@ export default function LandingPage() {
             justifyContent: "space-between",
           }}
         >
-          <div style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 18, color: "#250835" }}>
+          <div className="landing-logo" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 18, color: "#250835", flex: "none" }}>
             Agentic Sales Team
           </div>
-          <nav style={{ display: "flex", gap: 28, fontSize: 14, fontWeight: 500, color: "#250835" }}>
+          <nav className="landing-nav-links" style={{ display: "flex", gap: 28, fontSize: 14, fontWeight: 500, color: "#250835" }}>
             <a href="#features">Features</a>
             <a href="#how-it-works">How it works</a>
             <a href="#who-its-for">Who it&apos;s for</a>
@@ -110,7 +117,7 @@ export default function LandingPage() {
               <Link href="/dashboard">Dashboard</Link>
             </Show>
           </nav>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div className="landing-header-actions" style={{ display: "flex", alignItems: "center", gap: 16, flex: "none" }}>
             <Show when="signed-out">
               <SignInButton mode="modal">
                 <button style={{ fontSize: 14, fontWeight: 500, color: "#473054", background: "none", border: "none", cursor: "pointer" }}>
@@ -185,7 +192,7 @@ export default function LandingPage() {
           Agentic Sales Team is a crew of AI agents that find brands, research them, pitch in your voice, draft
           proposals, follow up, and book the call — so you can focus on making things.
         </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 56 }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 56 }}>
           <a
             href="#"
             style={{

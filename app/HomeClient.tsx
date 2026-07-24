@@ -161,8 +161,8 @@ export default function HomeClient({
   const hubLive = actLine(acts[0]).slice(0, 90);
   const hubLive2 = actLine(acts[1]).slice(0, 90);
 
-  const hubCardW = Math.max(dims.w - 52 - 2, 320);
-  const hubScale = Math.max(0.7, Math.min((dims.h - 250) / 524, (hubCardW - 40) / 760, 1.45));
+  const hubCardW = Math.max(dims.w - 52 - 2, 240);
+  const hubScale = Math.max(0.4, Math.min((dims.h - 250) / 524, (hubCardW - 40) / 760, 1.45));
   const teamPills = [{ id: "all", label: "Everyone" }].concat(teams.map((t) => ({ id: t.id, label: t.name })));
 
   return (
