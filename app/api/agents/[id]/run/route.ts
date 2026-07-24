@@ -3,10 +3,20 @@ import { auth } from "@clerk/nextjs/server";
 import { sql } from "@/lib/db";
 import { generateText } from "@/lib/ai";
 import { getMediaKitContext } from "@/lib/mediaKitContext";
+import { withAgentWorking } from "@/lib/aiAgents";
+import { checkAiRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const rl = checkAiRateLimit(userId);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests to your AI helpers — try again in ${rl.retryAfterSeconds}s.` },
+      { status: 429 }
+    );
+  }
 
   const agentId = Number(params.id);
   const body = await req.json();
@@ -25,7 +35,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   let output: string | null = null;
   let error: string | null = null;
   try {
-    output = await generateText(agent.instructions, prompt);
+    output = await withAgentWorking(agentId, () => generateText(agent.instructions, prompt));
   } catch (err) {
     error = err instanceof Error ? err.message : "Something went wrong talking to the AI.";
   }

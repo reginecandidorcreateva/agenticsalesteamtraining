@@ -1,6 +1,13 @@
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import HomeClient from "@/app/HomeClient";
+import { getDashboardData } from "@/lib/dashboardData";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { userId } = await auth();
+  if (!userId) redirect("/");
+  const { agents, teams, stats, activity } = await getDashboardData(userId);
+
   return (
     <div>
       <h1
@@ -14,7 +21,7 @@ export default function DashboardPage() {
       >
         Dashboard
       </h1>
-      <HomeClient />
+      <HomeClient agents={agents} teams={teams} stats={stats} activity={activity} live />
     </div>
   );
 }

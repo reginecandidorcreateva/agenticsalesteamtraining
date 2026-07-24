@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
 import type { ReactNode } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 const GLYPHS: Record<string, string> = {
   dashboard: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
@@ -162,6 +163,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
             flex: "none",
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
             padding: "0 28px",
             borderBottom: "1px solid #ebe6ee",
             background: "#fff",
@@ -189,6 +192,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               }}
             />
           </div>
+          <NotificationBell />
         </header>
 
         <main style={{ flex: 1, padding: "32px 28px" }}>{children}</main>

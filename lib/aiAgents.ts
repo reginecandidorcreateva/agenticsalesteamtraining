@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db";
+import { generateText } from "@/lib/ai";
 
 export interface DefaultAgent {
   name: string;
@@ -49,6 +50,34 @@ export async function getAgentInstructions(
   if (rows[0]) return { agentId: rows[0].id, instructions: rows[0].instructions };
   const fallback = DEFAULT_AGENTS.find((a) => a.kind === kind);
   return { agentId: null, instructions: fallback?.instructions ?? "" };
+}
+
+// Flips a real "is this agent working right now" flag around a real action,
+// so the dashboard can pulse an agent only while it's genuinely in flight —
+// not just because it has run at some point in the past.
+export async function withAgentWorking<T>(agentId: number | null, fn: () => Promise<T>): Promise<T> {
+  if (!agentId) return fn();
+  await sql`update agents set is_working = true, working_started_at = now() where id = ${agentId}`;
+  try {
+    return await fn();
+  } finally {
+    await sql`update agents set is_working = false where id = ${agentId}`;
+  }
+}
+
+export async function runAgentAction(
+  agentId: number | null,
+  instructions: string,
+  prompt: string
+): Promise<{ output: string | null; error: string | null }> {
+  let output: string | null = null;
+  let error: string | null = null;
+  try {
+    output = await withAgentWorking(agentId, () => generateText(instructions, prompt));
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Something went wrong talking to the AI.";
+  }
+  return { output, error };
 }
 
 export async function ensureDefaultAgents(userId: string) {

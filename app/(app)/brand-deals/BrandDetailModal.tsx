@@ -1,6 +1,7 @@
 "use client";
 import type { Brand } from "./types";
 import ArtifactPanel from "./ArtifactPanel";
+import BookCallPanel from "./BookCallPanel";
 
 export default function BrandDetailModal({
   brand,
@@ -90,6 +91,8 @@ export default function BrandDetailModal({
           }
           onResult={onUpdate}
         />
+
+        <BookCallPanel brand={brand} onUpdate={onUpdate} />
       </div>
     </div>
   );

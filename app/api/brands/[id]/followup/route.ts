@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { sql } from "@/lib/db";
-import { generateText } from "@/lib/ai";
-import { getAgentInstructions } from "@/lib/aiAgents";
+import { getAgentInstructions, runAgentAction } from "@/lib/aiAgents";
 import { getMediaKitContext } from "@/lib/mediaKitContext";
+import { checkAiRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const rl = checkAiRateLimit(userId);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests to your AI helpers — try again in ${rl.retryAfterSeconds}s.` },
+      { status: 429 }
+    );
+  }
 
   const brandId = Number(params.id);
   const brandRows = await sql`
@@ -37,13 +45,7 @@ ${context}
 
 Write the follow-up now: short, warm, low-pressure, referencing the above without restating it all.`;
 
-  let output: string | null = null;
-  let error: string | null = null;
-  try {
-    output = await generateText(instructions, prompt);
-  } catch (err) {
-    error = err instanceof Error ? err.message : "Something went wrong talking to the AI.";
-  }
+  const { output, error } = await runAgentAction(agentId, instructions, prompt);
 
   if (agentId) {
     await sql`

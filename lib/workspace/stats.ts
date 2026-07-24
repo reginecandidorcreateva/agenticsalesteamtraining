@@ -6,6 +6,8 @@ export interface WorkspaceStats {
   tasksRunning: number;
   leadsWorked: number;
   perAgent: { agentId: string; leadsWorked: number }[];
+  pitchesDrafted?: number;
+  callsBooked?: number;
 }
 
 export interface ActivityItem {

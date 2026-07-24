@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { statusMeta } from "@/lib/data";
 import { av, hubIcon } from "@/lib/visuals";
 import { css, Box } from "@/components/primitives";
-import { AGENT_TYPES, TEAM_TEMPLATES, type AgentType } from "@/lib/agentTypes";
+import { AGENT_TYPES, TEAM_TEMPLATES, type AgentType, type TeamTemplate } from "@/lib/agentTypes";
 import type { WorkspaceStats, ActivityItem } from "@/lib/workspace/stats";
 
 // [animation, tint] per activity type — the glyph comes from hubIcon().
@@ -58,15 +58,47 @@ const DEMO_ACTIVITY: ActivityItem[] = [
   { agentId: "proposal", text: "scoped a proposal for Fernweg Travel" },
 ];
 
-function byId(id: string): AgentType | undefined {
-  return AGENT_TYPES.find((a) => a.id === id);
-}
+export default function HomeClient({
+  agents = AGENT_TYPES,
+  teams = TEAM_TEMPLATES,
+  stats: ws = DEMO_STATS,
+  activity: acts = DEMO_ACTIVITY,
+  live = false,
+}: {
+  agents?: AgentType[];
+  teams?: TeamTemplate[];
+  stats?: WorkspaceStats;
+  activity?: ActivityItem[];
+  live?: boolean;
+} = {}) {
+  function byId(id: string): AgentType | undefined {
+    return agents.find((a) => a.id === id);
+  }
 
-export default function HomeClient() {
   const [dims, setDims] = useState({ w: 1280, h: 800 });
   const [reduced, setReduced] = useState(false);
   const [hubTeam, setHubTeam] = useState("all");
   const [tick, setTick] = useState(0);
+  const [workingIds, setWorkingIds] = useState<Set<string> | null>(null);
+
+  useEffect(() => {
+    if (!live) return;
+    let cancelled = false;
+    const poll = () => {
+      fetch("/api/dashboard/live")
+        .then((r) => r.json())
+        .then((data) => {
+          if (!cancelled) setWorkingIds(new Set<string>(data.workingAgentIds ?? []));
+        })
+        .catch(() => {});
+    };
+    poll();
+    const id = setInterval(poll, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [live]);
 
   useEffect(() => {
     const on = () => setDims({ w: window.innerWidth, h: window.innerHeight });
@@ -88,10 +120,6 @@ export default function HomeClient() {
     return () => clearInterval(hub);
   }, []);
 
-  const agents = AGENT_TYPES;
-  const teams = TEAM_TEMPLATES;
-  const ws = DEMO_STATS;
-  const acts = DEMO_ACTIVITY;
   const paMap = new Map(ws.perAgent.map((p) => [p.agentId, p]));
   const maxOut = Math.max(1, ...ws.perAgent.map((p) => p.leadsWorked));
 
@@ -106,13 +134,25 @@ export default function HomeClient() {
     const y = Math.round(262 + Math.sin(ang) * 186);
     const type = agentActivityType(a);
     const ic = hubIcons[type];
-    const m = statusMeta(a.status);
+    const liveWorking = workingIds?.has(a.id) ?? false;
+    const effectiveStatus = liveWorking ? "working" : a.status;
+    const m = statusMeta(effectiveStatus);
     const latest = acts.find((f) => f.agentId === a.id);
-    return { a, i, x, y, m, ic, type, badge: latest ? latest.text.slice(0, 40) : a.status === "working" ? "Working…" : "Idle" };
+    return {
+      a,
+      i,
+      x,
+      y,
+      m,
+      ic,
+      type,
+      liveWorking,
+      badge: liveWorking ? "Working…" : latest ? latest.text.slice(0, 40) : effectiveStatus === "working" ? "Working…" : "Idle",
+    };
   });
   const collabs = HN >= 5 ? [[0, 2], [1, 4]] : [];
 
-  const hubWorking = ws.activeAgents;
+  const hubWorking = workingIds ? agents.filter((a) => workingIds.has(a.id)).length : ws.activeAgents;
   const leadsWorked = ws.leadsWorked;
   const tasksRunning = ws.tasksRunning;
   const monthLabel = new Date().toLocaleString("en-US", { month: "long" }).toUpperCase();
@@ -228,7 +268,7 @@ export default function HomeClient() {
                 </div>
               </div>
             </div>
-            <div style={css("display:flex;gap:8px")}>
+            <div style={css("display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:340px")}>
               <div style={css("font-size:10.5px;font-weight:600;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 11px;backdrop-filter:blur(6px)")}>
                 {leadsWorked} brands · {monthLabel}
               </div>
@@ -238,6 +278,16 @@ export default function HomeClient() {
                 </svg>
                 {hubWorking} working · {tasksRunning} tasks
               </div>
+              {typeof ws.pitchesDrafted === "number" && (
+                <div style={css("font-size:10.5px;font-weight:600;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 11px;backdrop-filter:blur(6px)")}>
+                  {ws.pitchesDrafted} pitches
+                </div>
+              )}
+              {typeof ws.callsBooked === "number" && (
+                <div style={css("font-size:10.5px;font-weight:600;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 11px;backdrop-filter:blur(6px)")}>
+                  {ws.callsBooked} calls booked
+                </div>
+              )}
             </div>
           </div>
 
@@ -278,7 +328,7 @@ export default function HomeClient() {
                       "width:7px;height:7px;border-radius:50%;background:" +
                         n.m.dot +
                         ";flex:none;" +
-                        (n.a.status === "working" ? "animation:pulse 2s infinite" : "")
+                        (n.liveWorking ? "animation:pulse 2s infinite" : "")
                     )}
                   />
                   <span style={css("font-size:12px;font-weight:700;color:#fff")}>{n.a.name}</span>

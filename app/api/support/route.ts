@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { sql } from "@/lib/db";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rl = checkRateLimit(`support:${ip}`, 5, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests — try again in ${rl.retryAfterSeconds}s.` },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json();
   const name = String(body.name ?? "").trim();
   const email = String(body.email ?? "").trim();
