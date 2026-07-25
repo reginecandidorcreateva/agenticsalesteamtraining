@@ -7,9 +7,7 @@ const USER_INFO_URL = "https://open.tiktokapis.com/v2/user/info/";
 // TikTok requires a fixed, pre-registered HTTPS redirect_uri — must exactly
 // match what's configured in the TikTok Developer app's Login Kit settings.
 export const TIKTOK_REDIRECT_URI = "https://agenticsalesteamtraining.vercel.app/api/tiktok/callback";
-// Temporarily basic-only while diagnosing a TikTok "client_key" rejection tied
-// to the user.info.stats scope not being cleanly enabled on the sandbox app yet.
-export const TIKTOK_SCOPES = "user.info.basic";
+export const TIKTOK_SCOPES = "user.info.basic,user.info.stats";
 export const TIKTOK_STATE_COOKIE = "tiktok_oauth_state";
 
 export function buildAuthorizeUrl(state: string): string {
@@ -62,6 +60,9 @@ export async function fetchTikTokUserInfo(accessToken: string): Promise<TikTokUs
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const data = await res.json();
+  if (data.error?.code && data.error.code !== "ok") {
+    console.error("TikTok user info fetch failed:", data.error);
+  }
   return data.data?.user ?? {};
 }
 
