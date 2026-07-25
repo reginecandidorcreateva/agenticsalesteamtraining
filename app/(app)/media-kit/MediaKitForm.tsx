@@ -129,7 +129,7 @@ export default function MediaKitForm() {
                 style={{ borderRadius: "50%", objectFit: "cover", flex: "none" }}
               />
             )}
-            <div style={{ fontSize: 13, color: "#250835" }}>
+            <div style={{ fontSize: 13, color: "#250835", flex: 1 }}>
               <div style={{ fontWeight: 700 }}>TikTok connected{tiktok.displayName ? ` — @${tiktok.displayName}` : ""}</div>
               <div style={{ color: "#6a5b72" }}>
                 {typeof tiktok.followerCount === "number"
@@ -137,6 +137,12 @@ export default function MediaKitForm() {
                   : "Synced automatically above."}
               </div>
             </div>
+            <a
+              href="/api/tiktok/connect"
+              style={{ fontSize: 12.5, fontWeight: 600, color: "#ab2fed", whiteSpace: "nowrap" }}
+            >
+              Reconnect
+            </a>
           </>
         ) : (
           <>
