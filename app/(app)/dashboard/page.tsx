@@ -6,7 +6,7 @@ import { getDashboardData } from "@/lib/dashboardData";
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/");
-  const { agents, teams, stats, activity } = await getDashboardData(userId);
+  const { agents, teams, stats, activity, avatarUrl } = await getDashboardData(userId);
 
   return (
     <div>
@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       >
         Dashboard
       </h1>
-      <HomeClient agents={agents} teams={teams} stats={stats} activity={activity} live />
+      <HomeClient agents={agents} teams={teams} stats={stats} activity={activity} avatarUrl={avatarUrl} live />
     </div>
   );
 }

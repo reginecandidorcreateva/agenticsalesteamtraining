@@ -40,6 +40,7 @@ export interface DashboardData {
   teams: TeamTemplate[];
   stats: WorkspaceStats;
   activity: ActivityItem[];
+  avatarUrl: string | null;
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
@@ -93,7 +94,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }));
   }
 
-  const [leadsWorkedRows, tasksRunningRows, perAgentRows, activityRows, pitchesRows, callsRows] = await Promise.all([
+  const [leadsWorkedRows, tasksRunningRows, perAgentRows, activityRows, pitchesRows, callsRows, tiktokRows] = await Promise.all([
     sql`
       select count(*)::int as c from brands
       where clerk_user_id = ${userId}
@@ -124,6 +125,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       select count(*)::int as c from meetings
       where clerk_user_id = ${userId} and created_at >= date_trunc('month', now())
     `,
+    sql`
+      select avatar_url as "avatarUrl" from tiktok_connections where clerk_user_id = ${userId}
+    `,
   ]);
 
   const stats: WorkspaceStats = {
@@ -140,5 +144,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     text: r.task,
   }));
 
-  return { agents, teams, stats, activity };
+  const avatarUrl: string | null = tiktokRows[0]?.avatarUrl ?? null;
+
+  return { agents, teams, stats, activity, avatarUrl };
 }

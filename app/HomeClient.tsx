@@ -63,12 +63,14 @@ export default function HomeClient({
   teams = TEAM_TEMPLATES,
   stats: ws = DEMO_STATS,
   activity: acts = DEMO_ACTIVITY,
+  avatarUrl = null,
   live = false,
 }: {
   agents?: AgentType[];
   teams?: TeamTemplate[];
   stats?: WorkspaceStats;
   activity?: ActivityItem[];
+  avatarUrl?: string | null;
   live?: boolean;
 } = {}) {
   function byId(id: string): AgentType | undefined {
@@ -259,12 +261,19 @@ export default function HomeClient({
               <div style={css("position:absolute;left:0;top:0;right:0;bottom:0;border-radius:50%;border:2px solid rgba(255,255,255,.65);animation:ringPulse 3s ease-out 1.5s infinite")} />
               <div style={css("width:124px;height:124px;border-radius:50%;background:conic-gradient(#ab2fed 0 100%,rgba(255,255,255,.3) 100% 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 44px rgba(171,47,237,.5)")}>
                 <div style={css("width:106px;height:106px;border-radius:50%;background:#250835;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden")}>
-                  <div style={css("font-family:'Manrope',sans-serif;font-weight:800;font-size:24px;color:#fff;line-height:1")}>{leadsWorked}</div>
-                  <div style={css("font-size:8.5px;font-weight:700;letter-spacing:.1em;color:#decaff;margin-top:4px;text-align:center;line-height:1.4")}>
-                    BRANDS WORKED
-                    <br />
-                    {monthLabel}
-                  </div>
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt="" width={106} height={106} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <>
+                      <div style={css("font-family:'Manrope',sans-serif;font-weight:800;font-size:24px;color:#fff;line-height:1")}>{leadsWorked}</div>
+                      <div style={css("font-size:8.5px;font-weight:700;letter-spacing:.1em;color:#decaff;margin-top:4px;text-align:center;line-height:1.4")}>
+                        BRANDS WORKED
+                        <br />
+                        {monthLabel}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
